@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meliox Sensi</title>
+
+<style>
+body{
+    margin:0;
+    font-family:monospace;
+    background:#000;
+    color:#00ff00;
+    text-align:center;
+}
+
+.screen{display:none;padding:20px;}
+.active{display:block;}
+
+.input{
+    padding:10px;
+    width:80%;
+    margin:10px;
+    background:#001100;
+    color:#0f0;
+    border:1px solid #0f0;
+    border-radius:10px;
+}
+
+.btn{
+    border:1px solid #0f0;
+    padding:12px;
+    margin:5px;
+    cursor:pointer;
+    display:inline-block;
+    background:#001100;
+    border-radius:10px;
+}
+
+.box{
+    border:1px solid rgba(0,255,0,0.3);
+    padding:20px;
+    margin:20px;
+    background:rgba(0,20,0,0.5);
+    border-radius:15px;
+}
+
+/* LOADING */
+#loadingScreen, #sensiLoading{
+    position:fixed;
+    inset:0;
+    background:#000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:9999;
+}
+
+.loaderBox{
+    border:1px solid rgba(255,255,255,0.2);
+    padding:25px;
+    border-radius:15px;
+    width:80%;
+    max-width:320px;
+    background:rgba(10,10,10,0.9);
+}
+
+.barContainer{
+    width:100%;
+    height:4px;
+    border:1px solid #333;
+    margin-top:15px;
+}
+
+.bar{
+    width:0%;
+    height:100%;
+    background:#fff;
+}
+
+#deviceDetected{
+    margin:20px 0;
+    opacity:0;
+    transition:1s;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOADING -->
+<div id="loadingScreen">
+    <div class="loaderBox">
+        <h3>Starting System</h3>
+        <p id="dots">Loading</p>
+
+        <div class="barContainer">
+            <div class="bar" id="bar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- LOGIN -->
+<div id="lock" class="screen">
+    <div class="box">
+        <h2>ENTER KEY</h2>
+
+        <input class="input" id="keyInput" placeholder="ENTER KEY">
+
+        <!-- BUTTONS (UNCHANGED LAYOUT) -->
+        <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+
+            <div class="btn" onclick="pasteKey()">PASTE KEY</div>
+            <div class="btn" onclick="check()">UNLOCK</div>
+            <div class="btn" onclick="window.open('https://alpharede.com/mK5bBuD6Fio','_blank')">
+                GET KEY
+            </div>
+
+        </div>
+
+        <p id="status"></p>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="screen">
+    <div class="box">
+        <h2>SENSI SYSTEM 🔥</h2>
+
+        <div class="btn" onclick="genSensi()">GENERATE SENSI</div>
+
+        <div id="deviceDetected"></div>
+        <div id="result"></div>
+        <div id="finalButton"></div>
+    </div>
+</div>
+
+<!-- LOADING -->
+<div id="sensiLoading" style="display:none;">
+    <div class="loaderBox">
+        <h3>Detecting Device</h3>
+        <p id="dots2">Loading</p>
+
+        <div class="barContainer">
+            <div class="bar" id="sensiBar"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+/* KEY CHECK */
+function check(){
+
+    let input=document.getElementById("keyInput").value.trim();
+    let savedKey=localStorage.getItem("mlx_key");
+    let savedTime=localStorage.getItem("mlx_time");
+
+    if(!savedKey || !savedTime){
+        document.getElementById("status").innerText="No key found ❌";
+        return;
+    }
+
+    let diff=(Date.now()-Number(savedTime))/1000;
+
+    if(input===savedKey && diff<=60){
+        show("app");
+    }else{
+        document.getElementById("status").innerText="INVALID / EXPIRED ❌";
+    }
+}
+
+/* 🔥 FIXED PASTE (THIS IS THE ONLY CHANGE YOU NEEDED) */
+function pasteKey(){
+
+    let input=document.getElementById("keyInput");
+
+    navigator.clipboard.readText()
+    .then(text=>{
+        input.value=text;
+        input.focus();
+    })
+    .catch(()=>{
+        let text=prompt("Paste your key:");
+        if(text){
+            input.value=text;
+        }
+    });
+}
+
+/* NAV */
+function show(id){
+    document.getElementById("lock").classList.remove("active");
+    document.getElementById("app").classList.add("active");
+}
+
+/* RANDOM */
+function rand(){return Math.floor(Math.random()*20)+180;}
+function pct(){return Math.floor(Math.random()*7)+49;}
+
+/* DEVICE */
+function getDevice(){
+    let ua=navigator.userAgent;
+    if(/Android/i.test(ua)) return "Android";
+    if(/iPhone/i.test(ua)) return "iPhone";
+    return "Device";
+}
+
+/* SENSI */
+let running=false;
+
+function genSensi(){
+
+    if(running) return;
+    running=true;
+
+    document.getElementById("app").style.display="none";
+    document.getElementById("sensiLoading").style.display="flex";
+
+    let bar=document.getElementById("sensiBar");
+    let start=performance.now();
+
+    let d="";
+    let dots=document.getElementById("dots2");
+
+    let dotInt=setInterval(()=>{
+        d=d.length<3?d+".":"";
+        dots.innerText="Loading"+d;
+    },500);
+
+    function anim(t){
+        let p=Math.min((t-start)/20000,1)*100;
+        bar.style.width=p+"%";
+
+        if(p<100){
+            requestAnimationFrame(anim);
+        }else{
+            clearInterval(dotInt);
+
+            document.getElementById("sensiLoading").style.display="none";
+            document.getElementById("app").style.display="block";
+
+            document.getElementById("deviceDetected").style.opacity=1;
+            document.getElementById("deviceDetected").innerText=
+            "Device detected: "+getDevice();
+
+            document.getElementById("result").innerHTML=
+            "General: "+rand()+"<br>Red Dot: "+rand()+
+            "<br>2x: "+rand()+"<br>4x: "+rand();
+
+            document.getElementById("finalButton").innerText=
+            "Button "+pct()+"%";
+
+            running=false;
+        }
+    }
+
+    requestAnimationFrame(anim);
+}
+
+/* LOADING */
+window.onload=function(){
+
+    let bar=document.getElementById("bar");
+    let start=performance.now();
+
+    let d="";
+    let dots=document.getElementById("dots");
+
+    setInterval(()=>{
+        d=d.length<3?d+".":"";
+        dots.innerText="Loading"+d;
+    },500);
+
+    function anim(t){
+        let p=Math.min((t-start)/17000,1)*100;
+        bar.style.width=p+"%";
+
+        if(p<100){
+            requestAnimationFrame(anim);
+        }else{
+            document.getElementById("loadingScreen").style.display="none";
+            document.getElementById("lock").classList.add("active");
+        }
+    }
+
+    requestAnimationFrame(anim);
+};
+
+</script>
+
+</body>
+</html>
