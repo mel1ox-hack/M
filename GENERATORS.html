@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verification</title>
+
+<style>
+body{
+    margin:0;
+    font-family:monospace;
+    background: radial-gradient(circle at top, #111 0%, #000 60%);
+    color:#fff;
+    text-align:center;
+}
+
+/* LOADING */
+#loadingScreen{
+    position:fixed;
+    inset:0;
+    background:#0a0a0a;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+}
+
+.verifyBox{
+    border:1px solid rgba(255,255,255,0.15);
+    padding:25px;
+    border-radius:16px;
+    width:80%;
+    max-width:340px;
+    background:rgba(20,20,20,0.85);
+    box-shadow:0 0 25px rgba(255,255,255,0.05);
+}
+
+.small{font-size:12px;color:#aaa;}
+
+.barContainer{
+    width:100%;
+    height:4px;
+    border:1px solid #333;
+    margin-top:15px;
+}
+
+.bar{
+    width:0%;
+    height:100%;
+    background:#fff;
+}
+
+/* MAIN */
+#main{display:none;padding:20px;}
+
+.box{
+    border:1px solid rgba(255,255,255,0.1);
+    padding:25px;
+    border-radius:18px;
+    background:rgba(15,15,15,0.9);
+    box-shadow:0 0 20px rgba(255,255,255,0.05);
+}
+
+/* KEY DISPLAY */
+.key{
+    margin:18px 0;
+    padding:12px;
+    border-radius:10px;
+    border:1px dashed rgba(255,255,255,0.3);
+    color:#00ff88;
+    min-height:20px;
+}
+
+/* BUTTONS */
+.btn{
+    border:1px solid rgba(255,255,255,0.2);
+    padding:12px;
+    margin:10px;
+    display:inline-block;
+    cursor:pointer;
+    background:rgba(255,255,255,0.05);
+    color:#fff;
+    border-radius:10px;
+}
+
+/* 🔥 TOAST */
+#toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.85);
+    color:#fff;
+    padding:10px 15px;
+    border:1px solid #444;
+    border-radius:10px;
+    font-size:12px;
+    display:none;
+    z-index:99999;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOADING -->
+<div id="loadingScreen">
+    <div class="verifyBox">
+        <h3>Checking your browser</h3>
+        <p class="small">Secure system loading...</p>
+
+        <div class="barContainer">
+            <div class="bar" id="bar"></div>
+        </div>
+
+        <p class="small" id="dots">Loading</p>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+    <div class="box">
+        <h2>KEY GENERATED</h2>
+
+        <!-- PLACEHOLDER -->
+        <div class="key" id="keyText">Your key will appear here...</div>
+
+        <div class="btn" onclick="copyKey()">COPY KEY</div>
+        <div class="btn" onclick="goLogin()">GO TO LOGIN</div>
+
+        <p class="small" id="status"></p>
+    </div>
+</div>
+
+<script>
+
+let generatedKey="";
+
+/* KEY SYSTEM */
+function generateKey(){
+    let chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let key="MEL1OX_";
+
+    for(let i=0;i<6;i++){
+        key+=chars[Math.floor(Math.random()*chars.length)];
+    }
+
+    generatedKey=key;
+
+    localStorage.setItem("mlx_key",key);
+    localStorage.setItem("mlx_time",Date.now());
+
+    document.getElementById("keyText").innerText=key;
+}
+
+/* 🔥 COPY FIXED */
+function copyKey(){
+
+    if(!generatedKey || generatedKey===""){
+        showToast("No key generated ❌");
+        return;
+    }
+
+    if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(generatedKey)
+        .then(()=>{
+            showToast("Copied ✔");
+        })
+        .catch(()=>{
+            fallbackCopy();
+        });
+    }else{
+        fallbackCopy();
+    }
+}
+
+/* FALLBACK */
+function fallbackCopy(){
+    let t=document.createElement("textarea");
+    t.value=generatedKey;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    document.body.removeChild(t);
+
+    showToast("Copied ✔");
+}
+
+/* TOAST */
+function showToast(msg){
+    let toast=document.getElementById("toast");
+    toast.innerText=msg;
+    toast.style.display="block";
+
+    clearTimeout(window.toastTimer);
+    window.toastTimer=setTimeout(()=>{
+        toast.style.display="none";
+    },1500);
+}
+
+/* LOGIN */
+function goLogin(){
+    window.location.href="YOUR_SENSI_LINK.html";
+}
+
+/* LOADING */
+window.onload=function(){
+
+    let bar=document.getElementById("bar");
+    let start=performance.now();
+    let dots=document.getElementById("dots");
+    let d="";
+
+    setInterval(()=>{
+        d=d.length<3?d+".":"";
+        dots.innerText="Loading"+d;
+    },500);
+
+    function anim(t){
+        let p=Math.min((t-start)/20000,1)*100;
+        bar.style.width=p+"%";
+
+        if(p<100){
+            requestAnimationFrame(anim);
+        }else{
+            document.getElementById("loadingScreen").style.display="none";
+            document.getElementById("main").style.display="block";
+
+            generateKey();
+        }
+    }
+
+    requestAnimationFrame(anim);
+};
+
+</script>
+
+</body>
+</html>
